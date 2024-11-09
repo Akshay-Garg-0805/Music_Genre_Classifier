@@ -28,6 +28,8 @@ To run this application locally, please follow the instructions below:
    ```bash
    pip install -r requirements.txt
 3. **Download the Pre-trained Model**: Place the pre-trained model Trained_model_final.h5 in the project directory.
+    (Due to space limitation, model is hosted externally)  
+     Download pretrained model from #https://www.mediafire.com/file/qk7uj6rg69bffm4/Trained_model_final.h5/file
 4. **Run the Application:**
     ```bash
     streamlit run app.py
