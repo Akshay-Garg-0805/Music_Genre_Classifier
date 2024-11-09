@@ -6,4 +6,3 @@ torch
 torchaudio
 plotly
 gdown
-base64
