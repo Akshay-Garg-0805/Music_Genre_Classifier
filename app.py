@@ -8,13 +8,26 @@ import torchaudio
 from matplotlib import pyplot as plt
 import tempfile
 import os
+import requests
 
-# Load model
-@st.cache_resource
+def download_model():
+    url = "https://www.mediafire.com/file/qk7uj6rg69bffm4/Trained_model_final.h5/file"
+    response = requests.get(url, stream=True)
+    
+    # Save the file to the local directory
+    with open("Trained_model_final.h5", 'wb') as f:
+        for chunk in response.iter_content(chunk_size=1024):
+            if chunk:
+                f.write(chunk)
+
+# Load the model after downloading
 def load_model():
-    model = tf.keras.models.load_model("./Trained_model_final.h5")
+    download_model()
+    model = tf.keras.models.load_model("Trained_model_final.h5")
     return model
 
+# Example of using the model
+model = load_model()
 # Preprocess source file
 def load_and_preprocess_file(file_path, target_shape=(150, 150)):
     data = []
