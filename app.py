@@ -7,18 +7,13 @@ import torch
 import torchaudio
 from matplotlib import pyplot as plt
 import tempfile
-import os
-import requests
+import gdown
 
+# Function to download the model from Google Drive
 def download_model():
-    url = "https://www.mediafire.com/file/qk7uj6rg69bffm4/Trained_model_final.h5/file"
-    response = requests.get(url, stream=True)
-    
-    # Save the file to the local directory
-    with open("Trained_model_final.h5", 'wb') as f:
-        for chunk in response.iter_content(chunk_size=1024):
-            if chunk:
-                f.write(chunk)
+    url = "https://drive.google.com/uc?id=1jbzhth2qDgOPH624yGOfG5IbGXMdNO2P"
+    output = "Trained_model_final.h5"
+    gdown.download(url, output, quiet=False)
 
 # Load the model after downloading
 def load_model():
@@ -28,6 +23,7 @@ def load_model():
 
 # Example of using the model
 model = load_model()
+
 # Preprocess source file
 def load_and_preprocess_file(file_path, target_shape=(150, 150)):
     data = []
@@ -59,7 +55,6 @@ def load_and_preprocess_file(file_path, target_shape=(150, 150)):
 
 # Predict values
 def model_prediction(x_test):
-    model = load_model()
     y_pred = model.predict(x_test)
     predicted_cats = np.argmax(y_pred, axis=1)
     unique_elements, counts = np.unique(predicted_cats, return_counts=True)
