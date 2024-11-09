@@ -29,7 +29,8 @@ To run this application locally, please follow the instructions below:
    pip install -r requirements.txt
 3. **Download the Pre-trained Model**: Place the pre-trained model Trained_model_final.h5 in the project directory.
     (Due to space limitation, model is hosted externally)  
-     Download pretrained model from #https://www.mediafire.com/file/qk7uj6rg69bffm4/Trained_model_final.h5/file
+     Download pretrained model from  **"https://drive.google.com/uc?id=1jbzhth2qDgOPH624yGOfG5IbGXMdNO2P"**
+
 4. **Run the Application:**
     ```bash
     streamlit run app.py
@@ -67,7 +68,7 @@ TensorFlow - For loading and using the pre-trained model.
 Torch and Torchaudio - For audio processing.
 Librosa - For audio file manipulation and loading.
 NumPy - For numerical computations.
-Matplotlib - For visualization of the pie chart.
+Plotly - For visualization of the pie chart.
 
 **For installing all dependencies use**
 ```bash
