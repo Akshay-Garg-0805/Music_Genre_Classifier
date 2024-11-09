@@ -8,8 +8,6 @@ Welcome to the Music Genre Classifier! This AI-powered application is designed t
 - [Usage](#usage)
 - [How It Works](#how-it-works)
 - [Dependencies](#dependencies)
-- [Contributing](#contributing)
-- [License](#license)
 
 ## Features
 - **AI-Powered Classification**: Classifies music into genres using deep learning.
