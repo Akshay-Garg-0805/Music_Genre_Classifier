@@ -1,8 +1,8 @@
-streamlit==1.40.0
-tensorflow==2.18.0
-numpy==2.0.2
-librosa==0.10.2.post1
-torch==2.5.1
-torchaudio==2.5.1
-matplotlib==3.9.2
+streamlit
+tensorflow
+numpy
+librosa
+torch
+torchaudio
+matplotlib
 gdown
