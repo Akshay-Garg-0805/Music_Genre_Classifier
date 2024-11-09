@@ -4,5 +4,6 @@ numpy
 librosa
 torch
 torchaudio
-matplotlib
+plotly
 gdown
+base64
