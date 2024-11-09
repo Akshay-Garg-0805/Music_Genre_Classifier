@@ -18,7 +18,7 @@ def download_model():
 # Load the model after downloading
 def load_model():
     download_model()
-    model = tf.keras.models.load_model("./Trained_model.h5")
+    model = tf.keras.models.load_model("Trained_model_final.h5")
     return model
 
 # Preprocess source file
