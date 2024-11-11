@@ -83,7 +83,7 @@ def show_pie(values, labels, test_mp3):
     
     fig.update_layout(
         title_text=f"🎼 Music Genre Classification: {test_mp3.name}",
-        title_x=0.5,
+        title_x=0,
         height=600,
         width=600,
         legend=dict(font=dict(family="Arial, sans-serif", size=16, color="white")),
