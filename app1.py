@@ -99,7 +99,7 @@ st.markdown(
     <style>
         .footer, .header {
             width: 100%;
-            text-align: center;
+            text-align: left;
             color: white;    
         }
         .footer { position: fixed; bottom: 0; background-color: #0E1117; }
