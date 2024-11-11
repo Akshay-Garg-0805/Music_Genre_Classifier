@@ -3,26 +3,26 @@ import streamlit as st
 import tensorflow as tf
 import numpy as np
 import librosa
-from tensorflow.image import resize # type: ignore
+from tensorflow.image import resize
 import torch
 import torchaudio
 import plotly.graph_objects as go
 import gdown
 import tempfile
 
+# Set up the page configuration
+st.set_page_config(page_title="Music Genre Classifier", page_icon="🎶", layout="centered")
+
 def download_model():
     url = "https://drive.google.com/uc?id=1jbzhth2qDgOPH624yGOfG5IbGXMdNO2P"
     output = "Trained_model_final.h5"
     gdown.download(url, output, quiet=False)
 
-# Load the model after downloading
 def load_model():
     download_model()
     model = tf.keras.models.load_model("Trained_model_final.h5")
     return model
 
-# Preprocess source file
-# Preprocess source file
 def load_and_preprocess_file(file_path, target_shape=(150,150)):
     data = []
     audio_data, sample_rate = librosa.load(file_path, sr=None)
@@ -36,18 +36,12 @@ def load_and_preprocess_file(file_path, target_shape=(150,150)):
         start = i * (chunk_samples - overlap_samples)
         end = start + chunk_samples
         chunk = audio_data[start:end]
-        
-        # Convert chunk to Mel Spectrogram
         mel_spectrogram = torchaudio.transforms.MelSpectrogram()(torch.tensor(chunk).unsqueeze(0)).numpy()
-        
-        # Resize matrix based on provided target shape (150, 150)
         mel_spectrogram = resize(np.expand_dims(mel_spectrogram, axis=-1), target_shape)
         data.append(mel_spectrogram)
     
-    # Convert to numpy array and ensure correct shape: (num_chunks, height, width, channels)
     return np.array(data).reshape(-1, target_shape[0], target_shape[1], 1)
 
-# Predict values
 def model_prediction(x_test):
     model = load_model()
     y_pred = model.predict(x_test)
@@ -57,52 +51,49 @@ def model_prediction(x_test):
     max_elements = unique_elements[counts == max_count]
     return unique_elements, counts, max_elements[0]
 
-# Show pie chart
 def show_pie(values, labels, test_mp3):
     classes = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
-    
-    # Get the genre names corresponding to the labels
     genre_labels = [classes[i] for i in labels]
     
-    # Create a plotly pie chart
     fig = go.Figure(
         go.Pie(
             labels=genre_labels,
             values=values,
-            hole=0.3,  # Creates a donut chart
-            textinfo='label+percent',  # Show label and percentage on the chart
-            insidetextorientation='radial',  # Display text in a radial fashion
-            pull=[0.2 if i == np.argmax(values) else 0 for i in range(len(values))],  # Highlight the largest slice
+            hole=0.3,
+            textinfo='label+percent',
+            insidetextorientation='radial',
+            hoverinfo='label+percent+value',
+            pull=[0.15 if i == np.argmax(values) else 0.02 for i in range(len(values))],
             textfont=dict(
-                family="Arial, sans-serif",  # Font family
-                size=14,  # Font size
-                color="white",  # Font color
-                weight="bold"  # Make text bold
+                family="Arial, sans-serif",
+                size=14,
+                color="white",
+                weight="bold"
             )
         )
     )
     
-    # Update the title
+    fig.update_traces(
+        hoverinfo="label+percent+value",
+        hovertemplate="%{label}: %{value} songs (%{percent})",
+        marker=dict(line=dict(color="#FFFFFF", width=2))
+    )
+    
     fig.update_layout(
         title_text=f"Music Genre Classification: {test_mp3.name}",
-        title_x=0,  # Center the title
-        height=600,  # Increase the height
-        width=600,   # Increase the width
+        title_x=0.5,
+        height=600,
+        width=600,
         legend=dict(
-            font=dict(
-                family="Arial, sans-serif",  # Font family for legend
-                size=16,  # Font size for legend text
-                color="white"  # Font color for legend text
-            ),
-            title="Genres",  # Optional: You can add a title to the legend
-            title_font=dict(
-                size=18,  # Font size for the legend title
-                color="white"
-            )
-        )
+            font=dict(family="Arial, sans-serif", size=16, color="white"),
+            title="Genres",
+            title_font=dict(size=18, color="white")
+        ),
+        plot_bgcolor="#1f2c34",
+        paper_bgcolor="#1f2c34",
+        font_color="white"
     )
     
-    # Show the plot in Streamlit
     st.plotly_chart(fig)
 
 def play_audio(test_mp3):
@@ -116,83 +107,73 @@ def play_audio(test_mp3):
     """
     st.markdown(audio_html, unsafe_allow_html=True)
 
-# Sidebar UI
-st.sidebar.title("Dashboard")
-app_mode = st.sidebar.selectbox("Select page", ["About app", "How it works?", "Predict music genre"])
-
-# Main page
-if app_mode == "About app":
-    st.markdown(
-        """
-        <style>
-        .stapp {
+# Global styles and footer
+st.markdown(
+    """
+    <style>
+        .footer {
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100%;
             background-color: #0E1117;
             color: white;
+            text-align: center;
+            padding: 10px 0;
         }
-        h2 {
-            color: #00BFFF; /* Deep Sky Blue for main title */
-            font-size: 36px;
-            font-weight: bold;
+        .header {
+            color: #00BFFF;
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 1rem;
         }
-        h3 {
-            color: #32CD32; /* Light Blue for subtitles */
-            font-size: 28px;
+        .toast-icon {
+            position: fixed;
+            right: 15px;
+            bottom: 15px;
+            width: 50px;
+            height: 50px;
+            background-color: #32CD32;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
         }
-        p {
-            color: #f0f8ff; /* Light Gray for text */
-            font-size: 18px;
-        }
-        .stmarkdown {
-            color: #f0f8ff;
-        }
-        .stimage {
-            border-radius: 15px;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
-    st.markdown('''## Welcome to the,''')
-    st.markdown('''## Music Genre Classifier 🎶🎧''')
-    image_path = "music_genre_home.png"
-    st.image(image_path, width=350)
+st.sidebar.title("Dashboard")
+app_mode = st.sidebar.selectbox("Select page", ["About App", "How it Works?", "Predict Music Genre"])
 
+if app_mode == "About App":
+    st.markdown('<div class="header">About Music Genre Classifier</div>', unsafe_allow_html=True)
+    st.markdown("Welcome to the Music Genre Classifier 🎶🎧")
+    st.image("music_genre_home.png", width=350)
     st.markdown("""
-    ## Welcome to the Music Genre Classifier, an AI-powered app designed to help you explore and categorize music with ease! ✨
-                
-    Leveraging deep learning (DL) techniques, this app automatically analyzes your music tracks and classifies them into various genres with impressive accuracy.
-
-    Whether you’re a music enthusiast, a DJ, or just someone who loves discovering new tunes, this app brings AI to your fingertips, transforming how you interact with music. Simply upload a song, and within seconds, our advanced model will determine the genre, providing you with a seamless and intuitive music discovery experience.
-
-    ### **Key Features: 💪**
-
-    AI-Powered Music Classification: Built using deep learning, our app accurately classifies music into multiple genres.
-                
-    Fast & Easy: Upload a track, and let the app work its magic in seconds.
-                
-    Explore New Music: Find genres you might not have explored before and discover new favorites.
-                
-    User-Friendly Interface: An easy-to-use design makes classifying your music a breeze.
-                
-    #### Let our deep learning model do the heavy lifting while you enjoy the world of music in a whole new way! 🎧
-
-    (_P.S. -> It is an AI model so it may give wrong predictions too_)
+        ## This AI-powered app categorizes music into genres with ease.
+        - **AI-Powered Classification**: Uses DL techniques for accurate genre classification.
+        - **Fast & Easy**: Upload a song and see results within seconds.
+        - **User-Friendly Interface**: Makes classifying your music a breeze.
+        #### Let AI classify your music and discover new genres!
     """)
 
-elif app_mode == "How it works?":
+elif app_mode == "How it Works?":
+    st.markdown('<div class="header">How Does It Work?</div>', unsafe_allow_html=True)
     st.markdown("""
-    # How to know the music genre?
-    **1. Upload music: Start off with uploading the music file**\n
-    **2. Analysis: Our system will process the music file with advanced algorithms to classify it into a number of genres**\n
-    **3. Results: After the analysis phase, you will get a pie chart depicting the percentage of genres the music belongs to (A music is not purely a single genre)**
+        1. **Upload music**: Start with uploading a music file.
+        2. **AI Analysis**: The system processes the music and classifies it into genres.
+        3. **See Results**: View a pie chart showing genre probabilities.
 
-    #### _P.S. -> You can also listen to the music in the app itself_
+        _You can also listen to the music directly in the app!_
     """)
 
-elif app_mode == 'Predict music genre':
-    st.header("**_Predict Music Genre_**")
-    st.markdown('##### Upload the audio file (mp3 format)')
+elif app_mode == 'Predict Music Genre':
+    st.markdown('<div class="header">Predict Music Genre</div>', unsafe_allow_html=True)
+    st.markdown('##### Upload an audio file (mp3 format)')
     test_mp3 = st.file_uploader('', type=['mp3'])
 
     if test_mp3 is not None:
@@ -201,27 +182,23 @@ elif app_mode == 'Predict music genre':
             filepath = tmp_file.name
             st.success(f"File {test_mp3.name} uploaded successfully!")
 
-    # Play audio
-    if st.button("Play Audio"):
-        if  test_mp3 is not None:
+        if st.button("Play Audio"):
             play_audio(test_mp3)
 
-    
-        elif test_mp3 is None:
-            st.error("File not uploaded")
-
-    # Predict
-    if st.button("Know Genre"):
-        if test_mp3 is not None:
+        if st.button("Know Genre"):
             play_audio(test_mp3)
-            with st.spinner("Please wait ..."):
+            with st.spinner("Please wait..."):
                 X_test = load_and_preprocess_file(filepath)
                 labels, values, c_index = model_prediction(X_test)
-
                 st.balloons()
-                st.markdown("The music genre is : ")
                 show_pie(values, labels, test_mp3)
+    else:
+        st.error("No file uploaded")
 
-        
-        elif test_mp3 is None:
-            st.error("File not uploaded")
+st.markdown(
+    """
+    <div class="footer">© 2024 Music Genre Classifier | Enjoy Your Tunes! 🎶</div>
+    <div class="toast-icon">🎵</div>
+    """,
+    unsafe_allow_html=True
+)
