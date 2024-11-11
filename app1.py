@@ -13,15 +13,7 @@ import tempfile
 # Set up page configuration
 st.set_page_config(page_title="Music Genre Classifier", page_icon="🎶", layout="centered")
 
-# Initialize session state for navigation
-if 'page' not in st.session_state:
-    st.session_state.page = "Home"
-
-# Navigation Function
-def navigate_to(page_name):
-    st.session_state.page = page_name
-
-# Function to download and load model
+# Model download and loading functions
 def download_model():
     url = "https://drive.google.com/uc?id=1jbzhth2qDgOPH624yGOfG5IbGXMdNO2P"
     output = "Trained_model_final.h5"
@@ -32,18 +24,16 @@ def load_model():
     model = tf.keras.models.load_model("Trained_model_final.h5")
     return model
 
-# Preprocessing
+# Audio processing
 def load_and_preprocess_file(file_path, target_shape=(150,150)):
     data = []
     audio_data, sample_rate = librosa.load(file_path, sr=None)
     chunk_duration, overlap_duration = 4, 2
-    chunk_samples = chunk_duration * sample_rate
-    overlap_samples = overlap_duration * sample_rate
+    chunk_samples, overlap_samples = chunk_duration * sample_rate, overlap_duration * sample_rate
     num_chunks = int(np.ceil((len(audio_data) - chunk_samples) / (chunk_samples - overlap_samples))) + 1
     
     for i in range(num_chunks):
-        start = i * (chunk_samples - overlap_samples)
-        end = start + chunk_samples
+        start, end = i * (chunk_samples - overlap_samples), i * (chunk_samples - overlap_samples) + chunk_samples
         chunk = audio_data[start:end]
         mel_spectrogram = torchaudio.transforms.MelSpectrogram()(torch.tensor(chunk).unsqueeze(0)).numpy()
         mel_spectrogram = resize(np.expand_dims(mel_spectrogram, axis=-1), target_shape)
@@ -51,15 +41,16 @@ def load_and_preprocess_file(file_path, target_shape=(150,150)):
     
     return np.array(data).reshape(-1, target_shape[0], target_shape[1], 1)
 
-# Prediction
+# Predict function
 def model_prediction(x_test):
     model = load_model()
     y_pred = model.predict(x_test)
     predicted_cats = np.argmax(y_pred, axis=1)
     unique_elements, counts = np.unique(predicted_cats, return_counts=True)
-    return unique_elements, counts, unique_elements[counts.argmax()]
+    max_count, max_elements = np.max(counts), unique_elements[counts == max_count]
+    return unique_elements, counts, max_elements[0]
 
-# Visualization
+# Display pie chart
 def show_pie(values, labels, test_mp3):
     classes = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
     genre_labels = [classes[i] for i in labels]
@@ -79,16 +70,18 @@ def show_pie(values, labels, test_mp3):
     
     fig.update_layout(
         title_text=f"Music Genre Classification: {test_mp3.name}",
-        title_x=0,
+        title_x=0.5,
         height=600,
         width=600,
         legend=dict(font=dict(family="Arial, sans-serif", size=16, color="white")),
+        plot_bgcolor="#1f2c34",
+        paper_bgcolor="#1f2c34",
         font_color="white"
     )
     
     st.plotly_chart(fig)
 
-# Audio Playback
+# Audio playback
 def play_audio(test_mp3):
     audio_bytes = test_mp3.read()
     audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
@@ -100,94 +93,67 @@ def play_audio(test_mp3):
     """
     st.markdown(audio_html, unsafe_allow_html=True)
 
-# Custom Styles and Toolbar
+# Global styles and layout adjustments
 st.markdown(
     """
     <style>
-        .toolbar {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            background-color: #0E1117;
-            padding: 1rem 0;
-        }
-        .toolbar button {
-            color: #00BFFF;
-            font-size: 1.2rem;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .toolbar button:hover {
-            color: #32CD32;
-            text-decoration: underline;
-        }
-        .footer, .toast-icon {
-            position: fixed;
+        .footer, .header {
             width: 100%;
-            background-color: #0E1117;
-            color: white;
             text-align: center;
-            padding: 10px 0;
+            color: white;
+            padding: 1rem;
         }
-        .footer {
-            bottom: 0;
-        }
+        .footer { position: fixed; bottom: 0; background-color: #0E1117; }
+        .header { color: #00BFFF; font-size: 2rem; margin-bottom: 1rem; }
+        .sidebar .sidebar-content { background-color: #1f2c34; color: white; }
         .toast-icon {
-            right: 15px;
-            bottom: 15px;
-            width: 50px;
-            height: 50px;
-            background-color: #32CD32;
-            border-radius: 50%;
-            font-size: 1.5rem;
-            cursor: pointer;
+            position: fixed; right: 15px; bottom: 15px; width: 50px; height: 50px;
+            background-color: #32CD32; border-radius: 50%; color: white; font-size: 1.5rem;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
         }
+        .stButton>button { color: #ffffff; background: #32CD32; }
     </style>
     """,
     unsafe_allow_html=True
 )
 
-# Toolbar and clickable toast for navigation
+# Toast icon navigation
 st.markdown(
     """
-    <div class="toolbar">
-        <button onclick="window.location.reload()">Home</button>
-        <button onclick="window.location.reload()">About App</button>
-        <button onclick="window.location.reload()">How It Works</button>
-        <button onclick="window.location.reload()">Predict Music Genre</button>
-    </div>
+    <div class="toast-icon" onclick="window.location.href='#predict-page'">🎵</div>
     """,
     unsafe_allow_html=True
 )
 
-# Render based on session state
-if st.session_state.page == "Home":
-    st.title("🎶 Welcome to the Music Genre Classifier 🎶")
+# Sidebar navigation
+st.sidebar.title("Navigation")
+app_mode = st.sidebar.radio("Go to", ["Home", "How it Works?", "Predict Music Genre"])
+
+# Render the header for the selected page
+if app_mode == "Home":
+    st.markdown('<div class="header">About Music Genre Classifier</div>', unsafe_allow_html=True)
     st.image("music_genre_home.png", width=350)
-    st.write("""
-        **This app uses deep learning to classify your favorite music tracks into genres!**  
-        Upload a track and let AI reveal its genre, providing insights with intuitive visuals.
-    """)
+    st.write(
+        """
+        Welcome to the **Music Genre Classifier**! This tool uses **Deep Learning** to predict music genres. 
+        Upload a track to discover its genre and dive into insights with our interactive visuals.
+        """
+    )
 
-elif st.session_state.page == "About App":
-    st.title("About the App")
-    st.write("""
-        The Music Genre Classifier is an AI-powered tool that automatically analyzes music tracks and classifies them into genres.
-    """)
+elif app_mode == "How it Works?":
+    st.markdown('<div class="header">How Does It Work?</div>', unsafe_allow_html=True)
+    st.write(
+        """
+        **1. Upload** your music file.\n
+        **2. AI Analysis**: Our model processes and predicts genre probabilities.\n
+        **3. View Results**: Genre distribution is shown in an interactive pie chart.
+        """
+    )
 
-elif st.session_state.page == "How it Works":
-    st.title("How It Works")
-    st.write("""
-        1. **Upload a Music File**: Start by uploading an audio file in mp3 format.
-        2. **Genre Prediction**: The AI processes the audio and predicts the genre distribution.
-        3. **Explore Genres**: Discover the genre distribution in your music with a pie chart.
-    """)
+elif app_mode == "Predict Music Genre":
+    st.markdown('<div class="header" id="predict-page">Predict Music Genre</div>', unsafe_allow_html=True)
+    st.write("Upload an audio file (mp3 format)")
 
-elif st.session_state.page == "Predict Music Genre":
-    st.title("Predict Music Genre")
-    st.markdown("##### Upload an audio file (mp3 format)")
     test_mp3 = st.file_uploader('', type=['mp3'])
 
     if test_mp3 is not None:
@@ -201,18 +167,18 @@ elif st.session_state.page == "Predict Music Genre":
 
         if st.button("Know Genre"):
             play_audio(test_mp3)
-            with st.spinner("Please wait..."):
+            with st.spinner("Analyzing..."):
                 X_test = load_and_preprocess_file(filepath)
                 labels, values, c_index = model_prediction(X_test)
                 st.balloons()
                 show_pie(values, labels, test_mp3)
     else:
-        st.error("No file uploaded")
+        st.error("Please upload a file to proceed.")
 
 # Footer
 st.markdown(
     """
-    <div class="footer">© 2024 Music Genre Classifier | Enjoy Your Tunes! 🎶</div>
+    <div class="footer">© 2024 Music Genre Classifier | Let the Music Play 🎶</div>
     """,
     unsafe_allow_html=True
 )
