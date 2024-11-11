@@ -45,11 +45,24 @@ def load_and_preprocess_file(file_path, target_shape=(150,150)):
 def model_prediction(x_test):
     model = load_model()
     y_pred = model.predict(x_test)
+    
+    # Ensure there are predictions and counts
+    if y_pred.size == 0:
+        st.error("Error: The model did not return any predictions.")
+        return [], [], None
+    
     predicted_cats = np.argmax(y_pred, axis=1)
     unique_elements, counts = np.unique(predicted_cats, return_counts=True)
-    max_count, max_elements = np.max(counts), unique_elements[counts == max_count]
+    
+    # Handle empty counts array
+    if counts.size == 0:
+        st.error("Error: No valid predictions returned.")
+        return [], [], None
+    
+    max_count = np.max(counts)
+    max_elements = unique_elements[counts == max_count]
+    
     return unique_elements, counts, max_elements[0]
-
 # Display pie chart
 def show_pie(values, labels, test_mp3):
     classes = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
