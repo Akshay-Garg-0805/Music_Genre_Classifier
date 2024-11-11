@@ -9,6 +9,7 @@ import torchaudio
 import plotly.graph_objects as go
 import gdown
 import tempfile
+import time
 
 def download_model():
     url = "https://drive.google.com/uc?id=1jbzhth2qDgOPH624yGOfG5IbGXMdNO2P"
@@ -116,6 +117,47 @@ def play_audio(test_mp3):
     """
     st.markdown(audio_html, unsafe_allow_html=True)
 
+html_code = """
+<div id="balloon-container">
+  <div class="balloon" style="animation-duration: 4s;"></div>
+  <div class="balloon" style="animation-duration: 5s;"></div>
+  <div class="balloon" style="animation-duration: 6s;"></div>
+  <div class="balloon" style="animation-duration: 7s;"></div>
+</div>
+
+<style>
+#balloon-container {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+.balloon {
+  position: absolute;
+  bottom: -50px;
+  left: calc(50% - 20px);
+  width: 40px;
+  height: 60px;
+  background-color: #FF69B4;
+  border-radius: 20px;
+  animation: balloon-animation 5s ease-in-out infinite;
+}
+@keyframes balloon-animation {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100vh) scale(1.5);
+    opacity: 0;
+  }
+}
+</style>
+"""
 
 # Sidebar UI
 st.sidebar.title("Dashboard")
@@ -219,7 +261,9 @@ elif app_mode == 'Predict music genre':
                 X_test = load_and_preprocess_file(filepath)
                 labels, values, c_index = model_prediction(X_test)
 
-                st.snow()
+                
+                st.components.v1.html(html_code, height=400)
+                time.sleep(5)
                 st.markdown("The music genre is : ")
                 show_pie(values, labels, test_mp3)
 
