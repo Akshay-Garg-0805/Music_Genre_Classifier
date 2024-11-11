@@ -13,6 +13,14 @@ import tempfile
 # Set up page configuration
 st.set_page_config(page_title="Music Genre Classifier", page_icon="🎶", layout="centered")
 
+# Initialize session state for navigation
+if 'page' not in st.session_state:
+    st.session_state.page = "Home"
+
+# Navigation Function
+def navigate_to(page_name):
+    st.session_state.page = page_name
+
 # Function to download and load model
 def download_model():
     url = "https://drive.google.com/uc?id=1jbzhth2qDgOPH624yGOfG5IbGXMdNO2P"
@@ -103,13 +111,15 @@ st.markdown(
             background-color: #0E1117;
             padding: 1rem 0;
         }
-        .toolbar a {
+        .toolbar button {
             color: #00BFFF;
             font-size: 1.2rem;
-            text-decoration: none;
+            background: none;
+            border: none;
+            cursor: pointer;
             font-weight: bold;
         }
-        .toolbar a:hover {
+        .toolbar button:hover {
             color: #32CD32;
             text-decoration: underline;
         }
@@ -143,20 +153,17 @@ st.markdown(
 st.markdown(
     """
     <div class="toolbar">
-        <a href="#home">Home</a>
-        <a href="#about-app">About App</a>
-        <a href="#how-it-works">How It Works</a>
-        <a href="#predict-music-genre">Predict Music Genre</a>
+        <button onclick="window.location.reload()">Home</button>
+        <button onclick="window.location.reload()">About App</button>
+        <button onclick="window.location.reload()">How It Works</button>
+        <button onclick="window.location.reload()">Predict Music Genre</button>
     </div>
-    <div class="toast-icon" onclick="window.location.href='#predict-music-genre';">🎵</div>
     """,
     unsafe_allow_html=True
 )
 
-# Page Rendering
-page_section = st.experimental_get_query_params().get("page", ["Home"])[0]
-
-if page_section == "Home":
+# Render based on session state
+if st.session_state.page == "Home":
     st.title("🎶 Welcome to the Music Genre Classifier 🎶")
     st.image("music_genre_home.png", width=350)
     st.write("""
@@ -164,13 +171,13 @@ if page_section == "Home":
         Upload a track and let AI reveal its genre, providing insights with intuitive visuals.
     """)
 
-elif page_section == "About App":
+elif st.session_state.page == "About App":
     st.title("About the App")
     st.write("""
         The Music Genre Classifier is an AI-powered tool that automatically analyzes music tracks and classifies them into genres.
     """)
 
-elif page_section == "How it Works":
+elif st.session_state.page == "How it Works":
     st.title("How It Works")
     st.write("""
         1. **Upload a Music File**: Start by uploading an audio file in mp3 format.
@@ -178,7 +185,7 @@ elif page_section == "How it Works":
         3. **Explore Genres**: Discover the genre distribution in your music with a pie chart.
     """)
 
-elif page_section == "Predict Music Genre":
+elif st.session_state.page == "Predict Music Genre":
     st.title("Predict Music Genre")
     st.markdown("##### Upload an audio file (mp3 format)")
     test_mp3 = st.file_uploader('', type=['mp3'])
