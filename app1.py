@@ -100,8 +100,7 @@ st.markdown(
         .footer, .header {
             width: 100%;
             text-align: center;
-            color: white;
-            # padding: 1rem;
+            color: white;    
         }
         .footer { position: fixed; bottom: 0; background-color: #0E1117; }
         .header { color: #00BFFF; font-size: 2rem; font-weight: bold; margin-bottom: 1rem; }
