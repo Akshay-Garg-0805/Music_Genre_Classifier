@@ -219,7 +219,7 @@ elif app_mode == 'Predict music genre':
                 X_test = load_and_preprocess_file(filepath)
                 labels, values, c_index = model_prediction(X_test)
 
-                st.balloons()
+                st.snow()
                 st.markdown("The music genre is : ")
                 show_pie(values, labels, test_mp3)
 
